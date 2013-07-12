@@ -207,13 +207,22 @@ enum
 
 - (void) moveToPageEnded
 {
-    if (prevScreen_ != currentScreen_)
-    {
-        if ([self.delegate respondsToSelector:@selector(scrollLayer:scrolledToPageNumber:)])
-            [self.delegate scrollLayer: self scrolledToPageNumber: currentScreen_];
-    }
-    
-    prevScreen_ = currentScreen_ = [self pageNumberForPosition:self.position];
+  if (currentScreen_ < 0) {
+    currentScreen_ = [layers_ count] - 1;
+    self.position = [self positionForPageWithNumber:currentScreen_];
+  }
+  if (currentScreen_ >= [layers_ count]) {
+    currentScreen_ = 0;
+    self.position = [self positionForPageWithNumber:currentScreen_];
+  }
+
+  if (prevScreen_ != currentScreen_)
+  {
+      if ([self.delegate respondsToSelector:@selector(scrollLayer:scrolledToPageNumber:)])
+          [self.delegate scrollLayer: self scrolledToPageNumber: currentScreen_];
+  }
+  
+  prevScreen_ = currentScreen_ = [self pageNumberForPosition:self.position];
 }
 
 - (int) pageNumberForPosition: (CGPoint) position
@@ -238,7 +247,7 @@ enum
 
 -(void) moveToPage:(int)page
 {	
-    if (page < 0 || page >= [layers_ count]) {
+    if (![self validMove:page]) {
         CCLOGERROR(@"CCScrollLayer#moveToPage: %d - wrong page number, out of bounds. ", page);
 		return;
     }
@@ -248,6 +257,10 @@ enum
     [self runAction:changePage];
     currentScreen_ = page;
 
+}
+
+- (BOOL)validMove:(int)page {
+  return (page >= 0 && page < [layers_ count]);
 }
 
 -(void) selectPage:(int)page
@@ -426,9 +439,9 @@ enum
 		selectedPage = [self pageNumberForPosition:self.position];
 		if (selectedPage == currentScreen_)
 		{
-			if (delta < 0.f && selectedPage < [layers_ count] - 1)
+			if (delta < 0.f && [self validMove:selectedPage + 1])
 				selectedPage++;
-			else if (delta > 0.f && selectedPage > 0)
+			else if (delta > 0.f && [self validMove:selectedPage - 1])
 				selectedPage--;
 		}
 	}

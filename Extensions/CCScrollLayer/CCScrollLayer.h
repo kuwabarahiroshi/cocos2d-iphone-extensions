@@ -205,6 +205,11 @@
  */
 -(void) moveToPage:(int)page;
 
+/**
+ * Returns true if a movement to the given page index is inside boundary.
+ */
+- (BOOL)validMove:(int)page;
+
 /* Immedeatly moves scrollLayer to page with given number without running CCMoveTo. 
  * Does nothing if number >= totalScreens or < 0.
  */
